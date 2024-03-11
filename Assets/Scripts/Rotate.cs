@@ -1,14 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Rotate : MonoBehaviour
 {
-    [SerializeField] private float speed = 2f;
+    [SerializeField] private float _rotateSpeed = 2f;
 
-    // Update is called once per frame
-    private void Update()
+    private void Update() => Spin();
+
+    private void Spin()
     {
-        transform.Rotate(0, 0, 360 * speed * Time.deltaTime);
+        transform.Rotate(0, 0, 360 * _rotateSpeed * Time.deltaTime);
     }
 }

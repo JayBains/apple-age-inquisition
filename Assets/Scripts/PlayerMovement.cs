@@ -1,91 +1,93 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public enum DeadState { alive, dead }
+public enum DeadState { Alive, Dead }
 
 public class PlayerMovement : MonoBehaviour
 {
-    private Rigidbody2D rb;
-    private BoxCollider2D coll;
-    private SpriteRenderer sprite;
-    private Animator anim;
+    [SerializeField] private LayerMask _jumpableGround;
+    [SerializeField] private float _moveSpeed = 8f;
+    [SerializeField] private float _jumpForce = 10f;
+    [SerializeField] private AudioSource _jumpSoundEffect;
 
-    [SerializeField] private LayerMask jumpableGround;
+    private enum MovementState { Idle, Running, Jumping, Falling }
 
-    private float dirX = 0f;
-    [SerializeField] private float moveSpeed = 8f;
-    [SerializeField] private float jumpForce = 10f;
+    public DeadState PlayerState = DeadState.Alive;
 
-    private enum MovementState { idle, running, jumping, falling }
+    private Rigidbody2D _rigidbody;
+    private BoxCollider2D _collider;
+    private SpriteRenderer _sprite;
+    private Animator _animator;
 
-    public DeadState playerState = DeadState.alive;
+    private void Update() => CheckInput();
 
-    [SerializeField] private AudioSource jumpSoundEffect;
-
-    // Start is called before the first frame update
     private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        coll = GetComponent<BoxCollider2D>();
-        sprite = GetComponent<SpriteRenderer>();
-        anim = GetComponent<Animator>();
+        _rigidbody = GetComponent<Rigidbody2D>();
+        _collider = GetComponent<BoxCollider2D>();
+        _sprite = GetComponent<SpriteRenderer>();
+        _animator = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
-    private void Update()
+
+    private void CheckInput()
     {
-        if (playerState == DeadState.alive)
+        if (PlayerState == DeadState.Dead) return;
+        
+        float moveInputX = Input.GetAxisRaw("Horizontal");
+        Move(moveInputX);
+        if (Input.GetButtonDown("Jump") && IsGrounded())
         {
-            dirX = Input.GetAxisRaw("Horizontal");
-            rb.velocity = new Vector2(dirX * moveSpeed, rb.velocity.y);
-
-            if (Input.GetButtonDown("Jump") && IsGrounded())
-            {
-                jumpSoundEffect.Play();
-                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            }
-
-            UpdateAnimationState();
+            Jump();
         }
+        
+        UpdateAnimationState(moveInputX);
     }
 
+    private void Jump()
+    {
+        _jumpSoundEffect.Play();
+        _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, _jumpForce);
+    }
 
+    private void Move(float moveInput)
+    {
+        _rigidbody.velocity = new Vector2(moveInput * _moveSpeed, _rigidbody.velocity.y);
+    }
+    
 
-
-    private void UpdateAnimationState()
+    private void UpdateAnimationState(float moveInput)
     {
         MovementState state;
 
-        if (dirX > 0f)
+        if (moveInput > 0f)
         {
-            state = MovementState.running;
-            sprite.flipX = false;
+            state = MovementState.Running;
+            _sprite.flipX = false;
         }
-        else if (dirX < 0f)
+        else if (moveInput < 0f)
         {
-            state = MovementState.running;
-            sprite.flipX = true;
+            state = MovementState.Running;
+            _sprite.flipX = true;
         }
         else
         {
-            state = MovementState.idle;
+            state = MovementState.Idle;
         }
 
-        if (rb.velocity.y > .1f)
+        if (_rigidbody.velocity.y > .1f)
         {
-            state = MovementState.jumping;
+            state = MovementState.Jumping;
         }
-        else if (rb.velocity.y < -.1f)
+        else if (_rigidbody.velocity.y < -.1f)
         {
-            state = MovementState.falling;
+            state = MovementState.Falling;
         }
 
-        anim.SetInteger("state", (int)state);
+        _animator.SetInteger("state", (int)state);
     }
 
     private bool IsGrounded()
     {
-        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, .1f, jumpableGround);
+        return Physics2D.BoxCast(_collider.bounds.center, _collider.bounds.size, 0f, Vector2.down, .1f, _jumpableGround);
     }
 }
