@@ -1,34 +1,18 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Stomped : MonoBehaviour
 {
-    public float force;
-    bool stomped = false;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
+    [SerializeField] private float _force;
 
     private void OnTriggerEnter2D(Collider2D trigger)
-    {
-      if (trigger.CompareTag("Player"))
-           {
-           Rigidbody2D playerRb = trigger.GetComponent<Rigidbody2D>();
-           playerRb.AddForce(Vector2.up * force);
-           stomped = true;
-           BoxCollider2D boxCollidor = transform.parent.gameObject.GetComponent<BoxCollider2D>();
-           boxCollidor.enabled = false;
-       }
+    { 
+        if (trigger.CompareTag("Player"))
+        {
+            Rigidbody2D playerRigidbody = trigger.GetComponent<Rigidbody2D>();
+            playerRigidbody.AddForce(Vector2.up * _force);
+            BoxCollider2D boxCollider = transform.parent.GetComponent<BoxCollider2D>();
+            boxCollider.enabled = false;
+        }
     }
 
    private void OnBecameInvisible()
